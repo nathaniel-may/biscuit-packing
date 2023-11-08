@@ -104,6 +104,16 @@ impl CostFunction for BiscuitPacking {
 
     fn cost(&self, param: &Self::Param) -> Result<Self::Output, Error> {
         let mut ds = vec![];
+        // put the closest distance to pan edge into distances vector
+        let edges = param
+            .clone()
+            .into_iter()
+            .map(|p| vec![p.x, p.y])
+            .collect::<Vec<Vec<f64>>>()
+            .concat();
+        let min = edges.into_iter().reduce(|x, y| x.min(y)).unwrap();
+        ds.push(min);
+
         for p0 in param {
             if p0.x > self.w {
                 return Err(anyhow!("point outside width"));
@@ -117,10 +127,16 @@ impl CostFunction for BiscuitPacking {
             }
         }
         let max = ds.clone().into_iter().reduce(|x, y| x.max(y)).unwrap();
-        let avg: f64 = ds.into_iter().sum();
+        let avg = (ds.clone().into_iter().sum::<f64>()) / (ds.len() as f64);
         if max <= 0.0 {
             Err(anyhow!("all zeros"))
         } else {
+            // todo remove print
+            // println!("distances {:?}", ds);
+            // println!("max {max}");
+            // println!("avg {avg}");
+            // println!("score {}", max - avg);
+            // println!("-------------");
             Ok(max - avg)
         }
     }
@@ -129,8 +145,8 @@ impl CostFunction for BiscuitPacking {
 fn main() {
     let problem = BiscuitPacking {
         n: 2,
-        l: 4.0,
-        w: 4.0,
+        l: 2.0,
+        w: 3.0,
         rng: Arc::new(Mutex::new(rand::thread_rng())),
     };
     let init = problem.init();
