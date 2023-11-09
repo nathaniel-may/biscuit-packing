@@ -122,12 +122,6 @@ impl CostFunction for BiscuitPacking {
 
         let min = mins.clone().into_iter().reduce(|x, y| x.min(y)).unwrap();
         let value = self.w.min(self.l) - min;
-        // todo remove print
-        // println!("biscuit_placement {biscuit_placement:?}");
-        // println!("mins {mins:?}");
-        // println!("min {min}");
-        // println!("value {value}");
-        // println!("-------------");
 
         Ok(value)
     }
