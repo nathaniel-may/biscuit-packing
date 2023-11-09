@@ -8,9 +8,9 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 
 #[derive(PartialEq, Copy, Clone, Debug, Deserialize, Serialize)]
-struct Point {
-    x: f64,
-    y: f64,
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Point {
@@ -133,11 +133,11 @@ impl CostFunction for BiscuitPacking {
     }
 }
 
-fn run(biscuits: usize, pan_length: f64, pan_width: f64, iters: u64) {
+pub fn run(biscuits: usize, pan_width: f64, pan_length: f64, runs: u64) -> Vec<Point> {
     let problem = BiscuitPacking {
-        n: 18,
-        l: 18.0,
-        w: 28.0,
+        n: biscuits,
+        l: pan_length,
+        w: pan_width,
         rng: Arc::new(Mutex::new(rand::thread_rng())),
     };
     let init = problem.init();
@@ -145,21 +145,13 @@ fn run(biscuits: usize, pan_length: f64, pan_width: f64, iters: u64) {
     let res = Executor::new(problem.clone(), solver)
         .configure(|state| {
             state
-                // Set initial parameters (depending on the solver,
-                // this may be required)
                 .param(init)
-                // Set maximum iterations to 10
-                // (optional, set to `std::u64::MAX` if not provided)
-                .max_iters(5000000)
+                // stops after this number of iterations (runs in cli)
+                .max_iters(runs)
         })
         // run the solver on the defined problem
         .run()
         .unwrap();
 
-    println!("{}", problem);
-
-    let points = res.state().get_best_param().unwrap();
-    for p in points {
-        println!("{}, {}", p.x, p.y)
-    }
+    res.state().get_best_param().unwrap().clone()
 }
