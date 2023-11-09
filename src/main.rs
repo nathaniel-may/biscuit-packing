@@ -1,4 +1,4 @@
-use argmin::core::{CostFunction, Error, Executor};
+use argmin::core::{CostFunction, Error, Executor, State};
 use argmin::solver::simulatedannealing::{Anneal, SimulatedAnnealing};
 use rand::distributions::Uniform;
 use rand::rngs::ThreadRng;
@@ -69,7 +69,10 @@ impl Anneal for BiscuitPacking {
         let mut rng = self.rng.lock().unwrap();
         let idxs = Uniform::from(0..param.len());
         let step = Uniform::new_inclusive(-0.1, 0.1);
-        for _ in 0..(temp.floor() as u64 + 1) {
+        // annealing scales with the number of biscuits in the problem.
+        // this is so the same number of runs can be used to solve bigger problems.
+        let scale = (self.n as f64 / 7.0).ceil() as usize;
+        for _ in 0..(temp.floor() as usize * scale + 1) {
             let idx = rng.sample(idxs);
             let val = rng.sample(step);
             let x = rng.sample(step) >= 0.0;
@@ -132,7 +135,7 @@ impl CostFunction for BiscuitPacking {
 
 fn main() {
     let problem = BiscuitPacking {
-        n: 7,
+        n: 18,
         l: 18.0,
         w: 28.0,
         rng: Arc::new(Mutex::new(rand::thread_rng())),
@@ -147,12 +150,16 @@ fn main() {
                 .param(init)
                 // Set maximum iterations to 10
                 // (optional, set to `std::u64::MAX` if not provided)
-                .max_iters(1000000)
+                .max_iters(5000000)
         })
         // run the solver on the defined problem
         .run()
         .unwrap();
 
     println!("{}", problem);
-    println!("{}", res);
+
+    let points = res.state().get_best_param().unwrap();
+    for p in points {
+        println!("{}, {}", p.x, p.y)
+    }
 }
