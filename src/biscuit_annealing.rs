@@ -1,27 +1,11 @@
+use crate::point::Point;
 use argmin::core::{CostFunction, Error, Executor, State};
 use argmin::solver::simulatedannealing::{Anneal, SimulatedAnnealing};
 use rand::distributions::Uniform;
 use rand::rngs::ThreadRng;
 use rand::Rng;
-use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::sync::{Arc, Mutex};
-
-#[derive(PartialEq, Copy, Clone, Debug, Deserialize, Serialize)]
-pub struct Point {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl Point {
-    fn new(x: f64, y: f64) -> Point {
-        Point { x, y }
-    }
-
-    fn distance(&self, other: &Point) -> f64 {
-        ((other.x - self.x).powi(2) + (other.y - self.y).powi(2)).sqrt()
-    }
-}
 
 #[derive(Clone, Debug)]
 struct BiscuitPacking {

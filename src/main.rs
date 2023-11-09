@@ -1,5 +1,7 @@
 mod biscuit_annealing;
 mod cli;
+mod point;
+mod render;
 
 use biscuit_annealing::run;
 use clap::Parser;
@@ -18,9 +20,12 @@ fn main() {
             );
 
             let points = run(biscuits, width, length, runs);
-            for p in points {
-                println!("{}, {}", p.x, p.y)
-            }
+            // for p in points {
+            //     println!("{}, {}", p.x, p.y)
+            // }
+            let rendered = render::render_packing(args.pan_width, args.pan_length, points);
+            let filename = format!("{biscuits}_biscuits_{width}X{length}_pan.svg");
+            svg::save(filename, &rendered).unwrap();
         }
         // TODO check that start < end
         cli::Commands::Multi { start, end } => {
@@ -29,11 +34,14 @@ fn main() {
             );
 
             for n in start..(end + 1) {
-                println!(":: {n} biscuits ::");
+                // println!(":: {n} biscuits ::");
                 let points = run(n, width, length, runs);
-                for p in points {
-                    println!("{}, {}", p.x, p.y)
-                }
+                // for p in points {
+                //     println!("{}, {}", p.x, p.y)
+                // }
+                let rendered = render::render_packing(args.pan_width, args.pan_length, points);
+                let filename = format!("{n}_biscuits_{width}X{length}_pan.svg");
+                svg::save(filename, &rendered).unwrap();
             }
         }
     }
