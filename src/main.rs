@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use argmin::core::{CostFunction, Error, Executor};
 use argmin::solver::simulatedannealing::{Anneal, SimulatedAnnealing};
 use rand::distributions::Uniform;
@@ -77,19 +76,19 @@ impl Anneal for BiscuitPacking {
             if x {
                 let x_next = param_n[idx].x + val;
                 // don't update if it would cross the bound
-                if x_next < self.w || x_next <= 0.0 {
+                if x_next < self.w && x_next > 0.0 {
                     param_n[idx] = Point {
-                        x: param_n[idx].x + val,
+                        x: x_next,
                         y: param_n[idx].y,
                     };
                 }
             } else {
-                let y_next = param_n[idx].y;
+                let y_next = param_n[idx].y + val;
                 // don't update if it would cross the bound
-                if y_next + val < self.l || y_next <= 0.0 {
+                if y_next + val < self.l && y_next > 0.0 {
                     param_n[idx] = Point {
                         x: param_n[idx].x,
-                        y: param_n[idx].y + val,
+                        y: y_next,
                     };
                 }
             }
@@ -102,51 +101,40 @@ impl CostFunction for BiscuitPacking {
     type Param = Vec<Point>;
     type Output = f64;
 
-    fn cost(&self, param: &Self::Param) -> Result<Self::Output, Error> {
-        let mut ds = vec![];
-        // put the closest distance to pan edge into distances vector
-        let edges = param
-            .clone()
-            .into_iter()
-            .map(|p| vec![p.x, p.y])
-            .collect::<Vec<Vec<f64>>>()
-            .concat();
-        let min = edges.into_iter().reduce(|x, y| x.min(y)).unwrap();
-        ds.push(min);
+    fn cost(&self, biscuit_placement: &Self::Param) -> Result<Self::Output, Error> {
+        let mut mins = vec![];
 
-        for p0 in param {
-            if p0.x > self.w {
-                return Err(anyhow!("point outside width"));
-            } else if p0.y > self.l {
-                return Err(anyhow!("point outside length"));
-            }
-            for p1 in param {
+        // for each biscuit, calcualte distances to all other biscuits and pan edges
+        for p0 in biscuit_placement {
+            // start with the distance of the biscuit to the edges
+            let mut p0_ds = vec![self.w - p0.x, p0.x, self.l - p0.y, p0.y];
+            for p1 in biscuit_placement {
                 if p0 != p1 {
-                    ds.push(p0.distance(p1));
+                    p0_ds.push(p0.distance(p1))
                 }
             }
+            let min = p0_ds.into_iter().reduce(|x, y| x.min(y)).unwrap();
+            mins.push(min);
         }
-        let max = ds.clone().into_iter().reduce(|x, y| x.max(y)).unwrap();
-        let avg = (ds.clone().into_iter().sum::<f64>()) / (ds.len() as f64);
-        if max <= 0.0 {
-            Err(anyhow!("all zeros"))
-        } else {
-            // todo remove print
-            // println!("distances {:?}", ds);
-            // println!("max {max}");
-            // println!("avg {avg}");
-            // println!("score {}", max - avg);
-            // println!("-------------");
-            Ok(max - avg)
-        }
+
+        let min = mins.clone().into_iter().reduce(|x, y| x.min(y)).unwrap();
+        let value = self.w.min(self.l) - min;
+        // todo remove print
+        // println!("biscuit_placement {biscuit_placement:?}");
+        // println!("mins {mins:?}");
+        // println!("min {min}");
+        // println!("value {value}");
+        // println!("-------------");
+
+        Ok(value)
     }
 }
 
 fn main() {
     let problem = BiscuitPacking {
         n: 2,
-        l: 2.0,
-        w: 3.0,
+        l: 1.0,
+        w: 1.0,
         rng: Arc::new(Mutex::new(rand::thread_rng())),
     };
     let init = problem.init();
@@ -160,9 +148,6 @@ fn main() {
                 // Set maximum iterations to 10
                 // (optional, set to `std::u64::MAX` if not provided)
                 .max_iters(100000)
-                // Set target cost. The solver stops when this cost
-                // function value is reached (optional)
-                .target_cost(0.0)
         })
         // run the solver on the defined problem
         .run()
