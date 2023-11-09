@@ -132,9 +132,9 @@ impl CostFunction for BiscuitPacking {
 
 fn main() {
     let problem = BiscuitPacking {
-        n: 2,
-        l: 1.0,
-        w: 1.0,
+        n: 7,
+        l: 18.0,
+        w: 28.0,
         rng: Arc::new(Mutex::new(rand::thread_rng())),
     };
     let init = problem.init();
@@ -147,7 +147,7 @@ fn main() {
                 .param(init)
                 // Set maximum iterations to 10
                 // (optional, set to `std::u64::MAX` if not provided)
-                .max_iters(100000)
+                .max_iters(1000000)
         })
         // run the solver on the defined problem
         .run()
