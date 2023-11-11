@@ -71,9 +71,9 @@ impl Anneal for BiscuitPacking {
         let mut rng = self.rng.lock().unwrap();
         let idxs = Uniform::from(0..param.len());
         let step = Uniform::new_inclusive(-0.1, 0.1);
-        // annealing scales with the number of biscuits in the problem.
+        // annealing scales with the number of biscuits in the problem using an arbitrary constant.
         // this is so the same number of runs can be used to solve bigger problems.
-        let scale = (self.n as f64 / 7.0).ceil() as usize;
+        let scale = (self.n as f64 / 2.0).ceil() as usize;
         for _ in 0..(temp.floor() as usize * scale + 1) {
             let idx = rng.sample(idxs);
             let val = rng.sample(step);

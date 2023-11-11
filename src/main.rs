@@ -5,8 +5,10 @@ mod render;
 
 use biscuit_annealing::run;
 use clap::Parser;
+use futures::future;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = cli::Args::parse();
 
     // scale up so the svg comes out with reasonable dimensions
@@ -22,9 +24,6 @@ fn main() {
             );
 
             let points = run(biscuits, width, length, runs);
-            for p in &points {
-                println!("{}, {}", p.x, p.y)
-            }
             let rendered = render::render_packing(width, length, points);
             let filename = format!(
                 "{biscuits}_biscuits_{}X{}_pan.svg",
@@ -40,16 +39,23 @@ fn main() {
                 args.pan_width, args.pan_length
             );
 
+            let mut tasks = vec![];
             for n in start..(end + 1) {
-                println!("finished placing {n} biscuits");
-                let points = run(n, width, length, runs);
-                let rendered = render::render_packing(width, length, points);
-                let filename = format!(
-                    "{n}_biscuits_{}X{}_pan.svg",
-                    args.pan_width, args.pan_length
-                );
-                svg::save(filename, &rendered).unwrap();
+                // spawn the optimization onto its own thread
+                let task = tokio::spawn(async move {
+                    let points = run(n, width, length, runs);
+                    let rendered = render::render_packing(width, length, points);
+                    let filename = format!(
+                        "{n}_biscuits_{}X{}_pan.svg",
+                        args.pan_width, args.pan_length
+                    );
+                    svg::save(filename, &rendered).unwrap();
+                    println!("finished placing {n} biscuits");
+                });
+                tasks.push(task);
             }
+
+            future::join_all(tasks).await;
             println!("done")
         }
     }
