@@ -3,8 +3,8 @@ use argmin::core::{CostFunction, Error, Executor, State};
 use argmin::solver::simulatedannealing::{Anneal, SimulatedAnnealing};
 use fast_poisson::Poisson2D;
 use rand::distributions::Uniform;
-use rand::rngs::ThreadRng;
-use rand::Rng;
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
@@ -13,8 +13,8 @@ pub struct BiscuitPacking {
     pub n: usize,
     pub w: f64,
     pub l: f64,
-    // todo use a better one
-    pub rng: Arc<Mutex<ThreadRng>>,
+    // using SmallRng for speed
+    pub rng: Arc<Mutex<SmallRng>>,
 }
 
 impl BiscuitPacking {
@@ -144,7 +144,7 @@ pub fn approximate(biscuits: usize, width: f64, length: f64, runs: u64) -> Vec<P
         n: biscuits,
         w: width,
         l: length,
-        rng: Arc::new(Mutex::new(rand::thread_rng())),
+        rng: Arc::new(Mutex::new(SmallRng::from_entropy())),
     };
     let init = problem.init();
     let solver = SimulatedAnnealing::new(100.0).unwrap();

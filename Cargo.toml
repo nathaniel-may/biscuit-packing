@@ -10,7 +10,7 @@ argmin = { version = "0.8.1", features = ["rayon"] }
 anyhow = "1.0.75"
 serde = "1"
 rand_xoshiro = "0.6"
-rand = "0.8"
+rand = { version = "0.8", features = ["small_rng"] }
 clap = { version = "4", features = ["derive"] }
 svg = "0.14"
 fast_poisson = "1"
