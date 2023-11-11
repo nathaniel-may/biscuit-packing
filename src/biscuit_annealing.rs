@@ -1,6 +1,7 @@
 use crate::point::Point;
 use argmin::core::{CostFunction, Error, Executor, State};
 use argmin::solver::simulatedannealing::{Anneal, SimulatedAnnealing};
+use fast_poisson::Poisson2D;
 use rand::distributions::Uniform;
 use rand::rngs::ThreadRng;
 use rand::Rng;
@@ -17,17 +18,34 @@ struct BiscuitPacking {
 }
 
 impl BiscuitPacking {
+    // start with a poisson disk sample which is a much better starting condition than random
+    // Interactive example: https://www.jasondavies.com/poisson-disc/
+    // The fast_poisson library implements Bridson’s “Fast Poisson Disk Sampling” which is O(n)
+    //
     fn init(&self) -> Vec<Point> {
-        // todo start with poisson disc sample
-        // https://www.jasondavies.com/poisson-disc/
-        let mut out = vec![];
-        for _ in 0..self.n {
-            let mut rng = self.rng.lock().unwrap();
-            let x = rng.sample(Uniform::new(0.0, self.w));
-            let y = rng.sample(Uniform::new(0.0, self.l));
-            out.push(Point::new(x, y));
+        let mut rng = self.rng.lock().unwrap();
+
+        // set the initial disc radius assuming a very long tray which should generate slightly more samples than necessary.
+        let mut radius = self.w * self.l / (1.0 + self.n as f64);
+
+        let mut poisson = vec![];
+
+        // todo do I need this? Can I prove the initial radius will _always_ be an over sample?
+        // if we didn't generate enough samples, shrink the radius till we generate enough.
+        while poisson.len() < self.n {
+            poisson = Poisson2D::new()
+                .with_dimensions([self.w, self.l], radius)
+                .generate();
+            radius *= 0.7;
         }
-        out
+
+        // randomly remove samples till we the exact number of biscuits is reached
+        while poisson.len() > self.n {
+            let i = rng.sample(Uniform::new(0, poisson.len() - 1));
+            poisson.swap_remove(i);
+        }
+
+        poisson.iter().map(|[x, y]| Point::new(*x, *y)).collect()
     }
 }
 

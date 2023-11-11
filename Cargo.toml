@@ -13,3 +13,4 @@ rand_xoshiro = "0.6"
 rand = "0.8"
 clap = { version = "4", features = ["derive"] }
 svg = "0.14"
+fast_poisson = "1"
