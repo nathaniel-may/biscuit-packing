@@ -9,12 +9,12 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Debug)]
-struct BiscuitPacking {
-    n: usize,
-    w: f64,
-    l: f64,
+pub struct BiscuitPacking {
+    pub n: usize,
+    pub w: f64,
+    pub l: f64,
     // todo use a better one
-    rng: Arc<Mutex<ThreadRng>>,
+    pub rng: Arc<Mutex<ThreadRng>>,
 }
 
 impl BiscuitPacking {
@@ -139,11 +139,11 @@ impl CostFunction for BiscuitPacking {
     }
 }
 
-pub fn run(biscuits: usize, pan_width: f64, pan_length: f64, runs: u64) -> Vec<Point> {
+pub fn approximate(biscuits: usize, width: f64, length: f64, runs: u64) -> Vec<Point> {
     let problem = BiscuitPacking {
         n: biscuits,
-        l: pan_length,
-        w: pan_width,
+        w: width,
+        l: length,
         rng: Arc::new(Mutex::new(rand::thread_rng())),
     };
     let init = problem.init();
