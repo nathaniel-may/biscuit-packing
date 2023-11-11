@@ -122,7 +122,12 @@ impl CostFunction for BiscuitPacking {
             mins.push(min);
         }
 
-        let min = mins.clone().into_iter().reduce(|x, y| x.min(y)).unwrap();
+        let min = mins
+            .clone()
+            .into_iter()
+            .reduce(|x, y| x.min(y))
+            // number of biscuits will always be >= 1
+            .unwrap();
         let value = self.w.min(self.l) - min;
 
         Ok(value)

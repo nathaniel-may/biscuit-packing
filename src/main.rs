@@ -33,6 +33,7 @@ fn main() {
             svg::save(filename, &rendered).unwrap();
         }
         // TODO check that start < end
+        // TODO check that start >= 1 (zero would be ugly to implement)
         cli::Commands::Multi { start, end } => {
             println!(
                 "optimizing placement of biscuits from {start} to {end} on a {} X {} pan with {runs} runs",
@@ -40,11 +41,8 @@ fn main() {
             );
 
             for n in start..(end + 1) {
-                println!(":: {n} biscuits ::");
+                println!("finished placing {n} biscuits");
                 let points = run(n, width, length, runs);
-                for p in &points {
-                    println!("{}, {}", p.x, p.y)
-                }
                 let rendered = render::render_packing(width, length, points);
                 let filename = format!(
                     "{n}_biscuits_{}X{}_pan.svg",
@@ -52,6 +50,7 @@ fn main() {
                 );
                 svg::save(filename, &rendered).unwrap();
             }
+            println!("done")
         }
     }
 }
