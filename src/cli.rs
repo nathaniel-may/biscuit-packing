@@ -16,6 +16,11 @@ pub struct Args {
     #[arg(short, long, default_value_t = 5000000)]
     pub runs: u64,
 
+    // TODO add --gif option to output an animation of the run
+
+    // TODO add --discreet option to reduce the search space to a discreet set of cells within the boundary
+    //
+    /// Subcommands
     #[command(subcommand)]
     pub command: Commands,
 }

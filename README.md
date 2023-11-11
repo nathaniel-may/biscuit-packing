@@ -1,0 +1,5 @@
+# biscuit-packing
+This repository contains code for approximating optimum solutions to a 2 dimensional version of the [Tammes Problem](https://en.wikipedia.org/wiki/Tammes_problem) which I am calling "biscuit packing." Given a fixed boundary in two dimensions and a fixed number of points, find an arrangement of the points within the boundary that maximizes the minimum distance of each point from each other and the boundary. This is exactly analagous to the very common problem of deciding what arrangement to put baked goods on a tray before they go into the oven. The application only uses a rectangular boundary for an input since this was originally developed as a fascination project for a commercial baker.
+
+# methods
+Because the search space is particularly large, approximation is achieved via simulated annealing. The initial state is seeded with a random but roughly uniform set of points with Poisson Disk sampling, with sample points randomly removed till the desired number of bisciuts are left. The implementation for the initial sampling is linear [as described by Dr. Robert Bridson](http://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf).

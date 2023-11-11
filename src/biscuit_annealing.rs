@@ -106,6 +106,11 @@ impl CostFunction for BiscuitPacking {
     type Param = Vec<Point>;
     type Output = f64;
 
+    // TODO use rounding so it can find precise holes in strict lattice structures
+    // ex. 19 + 1 should be the same lattice structure
+    // TODO record all runs and keep the last "few" filtered by rating near the optimum.
+    // use these points to draw out "equivelance regions" so I can shift the output to be
+    // prettier
     fn cost(&self, biscuit_placement: &Self::Param) -> Result<Self::Output, Error> {
         let mut mins = vec![];
 

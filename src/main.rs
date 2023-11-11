@@ -17,6 +17,7 @@ async fn main() {
     let runs = args.runs;
 
     match args.command {
+        // TODO single and multi should call the same function to run instead of duplicating
         cli::Commands::Single { biscuits } => {
             println!(
                 "optimizing placement of {biscuits} biscuits on a {} X {} pan with {runs} runs",
