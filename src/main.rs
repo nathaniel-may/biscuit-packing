@@ -1,19 +1,22 @@
 mod app;
+// TODO move all these under the a lib module
 mod biscuit_annealing;
 mod cli;
+mod error;
 mod point;
 mod render;
 #[cfg(test)]
 mod test;
 
-use clap::Parser;
-use futures::future;
+use std::process::ExitCode;
 
 #[tokio::main]
-async fn main() {
-    let args = cli::Args::parse();
-    let app = app::parse(args);
-    println!("{}", app.header);
-    future::join_all(app.jobs()).await;
-    println!("done")
+async fn main() -> ExitCode {
+    match app::run().await {
+        Err(e) => {
+            eprintln!("{}", e);
+            ExitCode::FAILURE
+        }
+        Ok(()) => ExitCode::SUCCESS,
+    }
 }

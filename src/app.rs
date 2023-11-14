@@ -1,6 +1,12 @@
+use crate::{
+    biscuit_annealing::approximate,
+    cli,
+    error::{Error, Result},
+    render::render_packing,
+};
+use clap::Parser;
+use futures::future;
 use tokio::task::JoinHandle;
-
-use crate::{biscuit_annealing::approximate, cli, render::render_packing};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Run {
@@ -11,6 +17,7 @@ pub struct Run {
     pub announce_end: Option<String>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct App {
     pub header: String,
     pub runs: Vec<Run>,
@@ -41,7 +48,16 @@ impl App {
     }
 }
 
-pub fn parse(args: cli::Args) -> App {
+pub async fn run() -> Result<()> {
+    let args = cli::Args::parse();
+    let app = parse(args)?;
+    println!("{}", app.header);
+    future::join_all(app.jobs()).await;
+    println!("done");
+    Ok(())
+}
+
+pub fn parse(args: cli::Args) -> Result<App> {
     // scale up so the svg comes out with reasonable dimensions
     // TODO do I need to do this scaling anymore????
     let width = args.pan_width * 10.0;
@@ -50,12 +66,17 @@ pub fn parse(args: cli::Args) -> App {
 
     match args.command {
         cli::Commands::Single { biscuits } => {
+            // could implement zero to return the empty pan, but that's more of a pain than it sounds.
+            if biscuits == 0 {
+                return Err(Error::BiscuitsBelowOne);
+            }
+
             let header = format!(
                 "optimizing placement of {biscuits} biscuits on a {} X {} pan with {iters} runs",
                 args.pan_width, args.pan_length
             );
 
-            App {
+            let app = App {
                 header,
                 runs: vec![Run {
                     biscuits,
@@ -64,11 +85,22 @@ pub fn parse(args: cli::Args) -> App {
                     announce_end: None,
                     iters,
                 }],
-            }
+            };
+
+            Ok(app)
         }
         // TODO check that start < end
         // TODO check that start >= 1 (zero would be ugly to implement)
         cli::Commands::Multi { start, end } => {
+            // could implement zero to return the empty pan, but that's more of a pain than it sounds.
+            if start == 0 || end == 0 {
+                return Err(Error::BiscuitsBelowOne);
+            }
+            // if they're equal that's just a single run which is fine.
+            if start > end {
+                return Err(Error::StartGreaterThanEnd);
+            }
+
             let header = format!(
                 "optimizing placement of biscuits from {start} to {end} on a {} X {} pan with {iters} runs",
                 args.pan_width, args.pan_length
@@ -87,7 +119,7 @@ pub fn parse(args: cli::Args) -> App {
                 runs.push(run);
             }
 
-            App { header, runs }
+            Ok(App { header, runs })
         }
     }
 }
