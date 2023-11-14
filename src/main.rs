@@ -1,13 +1,4 @@
-mod app;
-// TODO move all these under the a lib module
-mod biscuit_annealing;
-mod cli;
-mod error;
-mod point;
-mod render;
-#[cfg(test)]
-mod test;
-
+use biscuit_packing::app;
 use std::process::ExitCode;
 
 #[tokio::main]
