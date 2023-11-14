@@ -2,7 +2,7 @@ use crate::point::Point;
 use svg::node::element::{Circle, Rectangle, SVG};
 use svg::Document;
 
-pub fn render_packing(pan_width: f64, pan_length: f64, placement: Vec<Point>) -> SVG {
+pub fn render_packing(pan_width: f64, pan_length: f64, placement: &[Point]) -> SVG {
     let view_box_width = 1000.0;
     let length_ratio = pan_length / pan_width;
     let biscuit_radius = 0.02 * pan_width;
