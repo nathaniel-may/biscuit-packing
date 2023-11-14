@@ -21,23 +21,9 @@ impl BiscuitPacking {
     // start with a poisson disk sample which is a much better starting condition than random
     // Interactive example: https://www.jasondavies.com/poisson-disc/
     // The fast_poisson library implements Bridson’s “Fast Poisson Disk Sampling” which is O(n)
-    //
-    fn init(&self) -> Vec<Point> {
+    pub fn init(&self) -> Vec<Point> {
         let mut rng = self.rng.lock().unwrap();
-
-        // set the initial disc radius assuming a very long tray which should generate slightly more samples than necessary.
-        let mut radius = self.w * self.l / (1.0 + self.n as f64);
-
-        let mut poisson = vec![];
-
-        // todo do I need this? Can I prove the initial radius will _always_ be an over sample?
-        // if we didn't generate enough samples, shrink the radius till we generate enough.
-        while poisson.len() < self.n {
-            poisson = Poisson2D::new()
-                .with_dimensions([self.w, self.l], radius)
-                .generate();
-            radius *= 0.7;
-        }
+        let mut poisson = self.sample(None);
 
         // randomly remove samples till we the exact number of biscuits is reached
         while poisson.len() > self.n {
@@ -45,7 +31,27 @@ impl BiscuitPacking {
             poisson.swap_remove(i);
         }
 
-        poisson.iter().map(|[x, y]| Point::new(*x, *y)).collect()
+        poisson
+    }
+
+    // this is separated out for testing
+    pub fn sample(&self, seed: Option<u64>) -> Vec<Point> {
+        // this disk radius will always generate more samples than the requested number of biscuits.
+        // since samples are always between r and 2r of another point, we assume all samples are within 2r
+        // of each other in a grid pattern if the pan were square. Solving for r in this scenario gives us
+        // the following radius.
+        let radius = (self.l + self.w) / (8_f64 * (self.n as f64).sqrt());
+
+        let mut poisson = Poisson2D::new().with_dimensions([self.w, self.l], radius);
+        if let Some(seed) = seed {
+            poisson = poisson.with_seed(seed);
+        }
+
+        poisson
+            .generate()
+            .iter()
+            .map(|[x, y]| Point::new(*x, *y))
+            .collect()
     }
 }
 
